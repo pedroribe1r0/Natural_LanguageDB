@@ -1,10 +1,8 @@
 import os
 import google.generativeai as genai
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.exc import SQLAlchemyError
 from Database_manager import DatabaseManager
 from TextToSQLConverter import TextToSQLConverter
+from config.settings import get_db_data
 
 class TextToSQLApp:
     """
@@ -95,14 +93,8 @@ class TextToSQLApp:
 
 # --- Bloco de Execução Principal ---
 if __name__ == "__main__":
-    load_dotenv() # Carrega as variáveis de ambiente novamente para o escopo global
-
     # Carrega as credenciais do banco de dados do arquivo .env
-    DB_USERNAME = os.getenv("DB_USERNAME")
-    DB_PASSWORD = os.getenv("DB_PASSWORD")
-    DB_HOST = os.getenv("DB_HOST")
-    DB_PORT = int(os.getenv("DB_PORT", 3306)) # Porta padrão para MySQL é 3306
-    DB_DATABASE = os.getenv("DB_DATABASE")
+    DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE = get_db_data()
 
     db_manager = DatabaseManager(DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)
 

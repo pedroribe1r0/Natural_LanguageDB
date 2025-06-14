@@ -1,6 +1,5 @@
-import os
 import google.generativeai as genai
-from dotenv import load_dotenv # Importa para carregar variáveis de ambiente do arquivo .env
+from config.settings import get_api_key
 
 class TextToSQLConverter:
     """
@@ -19,16 +18,15 @@ class TextToSQLConverter:
         self.schema = schema
         self.model_name = model_name
 
-        # Carrega as variáveis de ambiente do arquivo .env
-        # Certifique-se de que GOOGLE_API_KEY está definido no seu .env
-        load_dotenv()
-
         # Configura a chave da API Gemini
         # A chave será lida da variável de ambiente GOOGLE_API_KEY
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-        # Inicializa o modelo Gemini com o nome especificado
-        self.model = genai.GenerativeModel(self.model_name)
+        try:
+            ap_k = get_api_key()
+            genai.configure(api_key=ap_k)
+            # Inicializa o modelo Gemini com o nome especificado
+            self.model = genai.GenerativeModel(self.model_name)
+        except Exception as e:
+            print("Api key inexistente ou falha na conexão: " + e)
 
     def format_schema(self) -> str:
         """
