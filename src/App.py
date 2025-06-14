@@ -1,7 +1,7 @@
 import os
 import google.generativeai as genai
-from Database_manager import DatabaseManager
-from TextToSQLConverter import TextToSQLConverter
+from src.Database_manager import DatabaseManager
+from src.TextToSQLConverter import TextToSQLConverter
 from config.settings import get_db_data
 
 class TextToSQLApp:
