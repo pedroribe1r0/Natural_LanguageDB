@@ -6,7 +6,7 @@ class TextToSQLConverter:
     Uma classe para converter perguntas em linguagem natural para queries SQL
     usando a API do Google Gemini.
     """
-    def __init__(self, schema: dict, model_name: str = "gemini-pro"):
+    def __init__(self, schema: dict, model_name: str = "models/gemini-1.5-flash"):
         """
         Inicializa o conversor TextToSQL.
 
@@ -26,7 +26,7 @@ class TextToSQLConverter:
             # Inicializa o modelo Gemini com o nome especificado
             self.model = genai.GenerativeModel(self.model_name)
         except Exception as e:
-            print("Api key inexistente ou falha na conexão: " + e)
+            print("Api key inexistente ou falha na conexão: " + str(e))
 
     def format_schema(self) -> str:
         """

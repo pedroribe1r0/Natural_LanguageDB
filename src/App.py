@@ -1,77 +1,82 @@
 import os
-import google.generativeai as genai
 from src.Database_manager import DatabaseManager
 from src.TextToSQLConverter import TextToSQLConverter
 from config.settings import get_db_data
 
 class TextToSQLApp:
-    """
-    Classe para gerenciar o aplicativo de conversão de linguagem natural para SQL.
-    """
     def __init__(self, db_manager: DatabaseManager, converter: TextToSQLConverter):
         self.db_manager = db_manager
         self.converter = converter
         self.db_connected = False
         self.schema_loaded = False
 
-    def conectar_banco(self):
-        print("\n🔌 Conectando ao banco de dados...")
-        self.db_connected = self.db_manager.connect()
-        if not self.db_connected:
-            print("❌ Conexão falhou. Verifique as credenciais.")
-        else:
-            print("✅ Banco conectado com sucesso!")
+    def limpar_terminal(self):
+        os.system("clear")
 
-    def carregar_esquema(self):
+    def pausar(self):
+        input("\nPressione Enter para continuar...")
+
+    def conectar_banco(self):
+        self.limpar_terminal()
+        if self.db_manager.connect_server():
+            nome = self.db_manager.list_databases()
+            self.db_connected = True
+            if nome and self.db_manager.connect_database(nome):
+                schema = self.db_manager.get_tables_and_columns()
+                self.converter.schema = schema
+                print(self.converter.format_schema())
+                self.schema_loaded = True
         if not self.db_connected:
-            print("⚠️ Conecte-se ao banco primeiro.")
-            return
-        print("\n📦 Carregando esquema...")
-        schema = self.db_manager.get_tables_and_columns()
-        if schema:
-            self.converter.schema = schema
-            self.schema_loaded = True
-            print("✅ Esquema carregado com sucesso:\n")
-            print(self.converter.format_schema())
+            print("Conexão falhou. Verifique as credenciais.")
         else:
-            print("❌ Erro ao carregar o esquema.")
+            print("Banco conectado com sucesso.")
+        self.pausar()
 
     def perguntar_e_executar(self):
+        self.limpar_terminal()
+
         if not self.db_connected or not self.schema_loaded:
-            print("⚠️ Conecte-se ao banco e carregue o esquema primeiro.")
+            print("Conecte-se ao banco e carregue o esquema primeiro.")
+            self.pausar()
             return
 
-        pergunta = input("\n🧠 Pergunta em linguagem natural: ").strip()
+        pergunta = input("Pergunta em linguagem natural: ").strip()
         if not pergunta:
-            print("⚠️ Nenhuma pergunta fornecida.")
+            print("Nenhuma pergunta fornecida.")
+            self.pausar()
             return
 
-        print("📡 Enviando para o Gemini...")
+        print("Enviando para o Gemini...")
         sql = self.converter.generate_sql(pergunta)
+        print(f"\nSQL Gerado:\n{sql}")
 
         if sql:
-            print("🚀 Executando...")
-            rows, cols = self.db_manager.run_query(sql)
-            if rows is not None:
-                if cols:
-                    print("\n📊 Resultado:")
+            print("\nExecutando...")
+            result = self.db_manager.run_query(sql)
+
+            if result is not None:
+                rows, cols = result
+
+                if rows and cols:
+                    print("\nResultado:")
                     print(f"Colunas: {', '.join(cols)}")
                     for row in rows:
                         print(row)
                 else:
-                    print("✅ Query executada com sucesso.")
+                    print("Query executada com sucesso.")
             else:
-                print("❌ Erro ao executar a query.")
+                print("Erro ao executar a query.")
         else:
-            print("❌ O Gemini não conseguiu gerar a query.")
+            print("O Gemini não conseguiu gerar a query.")
+        self.pausar()
 
     def exibir_menu(self):
-        print("\n====== MENU PRINCIPAL ======")
+        self.limpar_terminal()
+        print("==================== MENU PRINCIPAL ====================")
         print("1. Conectar ao Banco de Dados")
-        print("2. Carregar Esquema do Banco")
-        print("3. Fazer Pergunta e Executar SQL")
-        print("4. Sair")
-        print("============================")
+        print("2. Fazer Pergunta e Executar SQL")
+        print("3. Sair")
+        print("========================================================")
 
     def run(self):
         while True:
@@ -82,21 +87,23 @@ class TextToSQLApp:
                 case '1':
                     self.conectar_banco()
                 case '2':
-                    self.carregar_esquema()
-                case '3':
                     self.perguntar_e_executar()
-                case '4':
-                    print("👋 Saindo do programa.")
+                case '3':
+                    print("Saindo do programa.")
                     break
                 case _:
-                    print("❌ Opção inválida. Tente novamente.")
+                    print("Opção inválida. Tente novamente.")
+                    self.pausar()
 
-# --- Bloco de Execução Principal ---
+# --- Execução principal ---
 if __name__ == "__main__":
-    # Carrega as credenciais do banco de dados do arquivo .env
-    DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE = get_db_data()
+    DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT = get_db_data()
+    print(f"Usuário: {DB_USERNAME}")
+    print(f"Senha: {DB_PASSWORD}")
+    print(f"Host: {DB_HOST}")
+    print(f"Porta: {DB_PORT} ({type(DB_PORT)})")
 
-    db_manager = DatabaseManager(DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)
+    db_manager = DatabaseManager(DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT)
 
     try:
         text_to_sql_converter = TextToSQLConverter(schema={})
@@ -106,8 +113,7 @@ if __name__ == "__main__":
         text_to_sql_converter = None
 
     if text_to_sql_converter:
-        # Instancia e executa o menu
         app_menu = TextToSQLApp(db_manager, text_to_sql_converter)
         app_menu.run()
     else:
-        print("\nO programa não pode iniciar sem a configuração correta da API do Gemini.")
+        print("O programa não pode iniciar sem a configuração correta da API do Gemini.")
