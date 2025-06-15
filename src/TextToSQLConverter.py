@@ -48,14 +48,21 @@ class TextToSQLConverter:
             str | None: A query SQL gerada ou None se ocorrer um erro.
         """
         prompt = (
-            "Você é um assistente que converte linguagem natural para SQL.\n"
-            "Sempre que gerar uma consulta SQL, adicione um ponto e vírgula no final.\n"
-            "Esquema do banco de dados:\n"
+            "Você é um assistente que converte perguntas em linguagem natural para SQL.\n"
+            "Sempre gere apenas a query SQL, sem comentários ou explicações.\n"
+            "Use nomes de tabelas e colunas exatamente como fornecidos no esquema.\n"
+            "Adicione ponto e vírgula no final da query.\n"
+            "Exemplo 1:\n"
+            "Esquema: Tabela alunos (RA, Nome)\n"
+            "Pergunta: Mostre todos os alunos\n"
+            "Resposta: SELECT * FROM alunos;\n\n"
+            "Agora, com base no seguinte esquema:\n"
             f"{self.format_schema()}\n"
             "Pergunta:\n"
             f"{user_question}\n"
-            "Responda apenas com a query SQL completa, sem explicações:"
+            "Responda apenas com a query SQL:"
         )
+
 
         try:
             # Chama a API do Gemini para gerar conteúdo
